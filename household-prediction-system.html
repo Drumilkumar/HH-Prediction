@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GharMol — House Price Predictor</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --card: #16161f;
+    --border: rgba(255,255,255,0.07);
+    --accent: #e8c84a;
+    --accent2: #4a9ee8;
+    --text: #f0ede6;
+    --muted: #7a7a8a;
+    --success: #4ade80;
+    --danger: #f87171;
+    --warn: #fbbf24;
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* HEADER */
+  header {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(10,10,15,0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 60px;
+  }
+  .logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.3rem; letter-spacing: -0.5px; }
+  .logo span { color: var(--accent); }
+  .nav-links { display: flex; gap: 2rem; }
+  .nav-links a { color: var(--muted); text-decoration: none; font-size: 14px; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--text); }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    text-align: center;
+    padding: 80px 2rem 4rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-bg {
+    position: absolute; inset: 0; pointer-events: none;
+    background:
+      radial-gradient(ellipse 60% 40% at 20% 50%, rgba(232,200,74,0.06) 0%, transparent 70%),
+      radial-gradient(ellipse 50% 40% at 80% 30%, rgba(74,158,232,0.06) 0%, transparent 70%);
+  }
+  .hero-grid {
+    position: absolute; inset: 0; pointer-events: none;
+    background-image: linear-gradient(var(--border) 1px, transparent 1px),
+                      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+  }
+  .hero-content { position: relative; max-width: 700px; }
+  .hero-badge {
+    display: inline-block;
+    background: rgba(232,200,74,0.1);
+    border: 1px solid rgba(232,200,74,0.25);
+    color: var(--accent);
+    font-size: 12px; font-weight: 500; letter-spacing: 1px; text-transform: uppercase;
+    padding: 5px 14px; border-radius: 100px;
+    margin-bottom: 1.5rem;
+    animation: fadeUp 0.6s ease both;
+  }
+  .hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2.5rem, 6vw, 4rem);
+    font-weight: 800; line-height: 1.1;
+    letter-spacing: -2px;
+    animation: fadeUp 0.6s 0.1s ease both;
+  }
+  .hero h1 em { font-style: normal; color: var(--accent); }
+  .hero p {
+    color: var(--muted); font-size: 1.05rem; margin-top: 1.2rem;
+    animation: fadeUp 0.6s 0.2s ease both;
+  }
+  .hero-cta {
+    margin-top: 2rem; display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;
+    animation: fadeUp 0.6s 0.3s ease both;
+  }
+  .btn-primary {
+    background: var(--accent); color: #0a0a0f;
+    border: none; padding: 12px 28px; border-radius: 100px;
+    font-family: 'DM Sans', sans-serif; font-weight: 500; font-size: 15px;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .btn-primary:hover { background: #f0d660; transform: translateY(-1px); }
+  .btn-outline {
+    background: transparent; color: var(--text);
+    border: 1px solid var(--border); padding: 12px 28px; border-radius: 100px;
+    font-family: 'DM Sans', sans-serif; font-weight: 400; font-size: 15px;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .btn-outline:hover { border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.04); }
+  .stats-row {
+    display: flex; gap: 3rem; justify-content: center; margin-top: 3rem;
+    animation: fadeUp 0.6s 0.4s ease both;
+  }
+  .stat { text-align: center; }
+  .stat-num { font-family: 'Syne', sans-serif; font-size: 1.6rem; font-weight: 700; color: var(--accent); }
+  .stat-label { font-size: 12px; color: var(--muted); }
+
+  /* MAIN LAYOUT */
+  main { max-width: 1200px; margin: 0 auto; padding: 4rem 2rem; }
+  section { margin-bottom: 5rem; }
+  .section-title {
+    font-family: 'Syne', sans-serif; font-size: 1.6rem; font-weight: 700;
+    letter-spacing: -0.5px; margin-bottom: 0.4rem;
+  }
+  .section-sub { color: var(--muted); font-size: 14px; margin-bottom: 2rem; }
+
+  /* PREDICTOR FORM */
+  .predictor-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;
+  }
+  @media (max-width: 768px) { .predictor-grid { grid-template-columns: 1fr; } }
+  .form-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 2rem;
+  }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  @media (max-width: 500px) { .form-grid { grid-template-columns: 1fr; } }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group.full { grid-column: 1 / -1; }
+  label { font-size: 12px; color: var(--muted); font-weight: 500; letter-spacing: 0.3px; text-transform: uppercase; }
+  input[type=number], input[type=text], select {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 14px;
+    border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif; font-size: 14px;
+    transition: border-color 0.2s;
+    width: 100%;
+  }
+  input:focus, select:focus { outline: none; border-color: rgba(232,200,74,0.4); }
+  select option { background: #1a1a25; }
+
+  /* AMENITIES */
+  .amenities-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 6px;
+  }
+  .amenity-chip {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 8px 12px;
+    cursor: pointer; transition: all 0.2s; user-select: none;
+    font-size: 13px;
+  }
+  .amenity-chip:hover { border-color: rgba(232,200,74,0.3); background: rgba(232,200,74,0.04); }
+  .amenity-chip.active { border-color: var(--accent); background: rgba(232,200,74,0.08); color: var(--accent); }
+  .amenity-chip .icon { font-size: 16px; }
+
+  .predict-btn {
+    width: 100%; margin-top: 1.5rem;
+    background: var(--accent); color: #0a0a0f;
+    border: none; padding: 14px; border-radius: var(--radius-sm);
+    font-family: 'Syne', sans-serif; font-weight: 700; font-size: 15px; letter-spacing: 0.3px;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .predict-btn:hover { background: #f0d660; }
+  .predict-btn:active { transform: scale(0.99); }
+
+  /* RESULT CARD */
+  .result-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 2rem; display: flex; flex-direction: column; gap: 1.5rem;
+  }
+  .result-price {
+    text-align: center; padding: 1.5rem;
+    background: rgba(232,200,74,0.06); border: 1px solid rgba(232,200,74,0.15);
+    border-radius: var(--radius-sm);
+  }
+  .result-price .label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+  .result-price .price { font-family: 'Syne', sans-serif; font-size: 2.2rem; font-weight: 800; color: var(--accent); margin: 4px 0; }
+  .result-price .range { font-size: 13px; color: var(--muted); }
+  .verdict-box {
+    border-radius: var(--radius-sm); padding: 1rem 1.2rem;
+    font-size: 13px; line-height: 1.6;
+  }
+  .verdict-box.good { background: rgba(74,222,128,0.06); border: 1px solid rgba(74,222,128,0.2); color: #86efac; }
+  .verdict-box.fair { background: rgba(251,191,36,0.06); border: 1px solid rgba(251,191,36,0.2); color: #fde68a; }
+  .verdict-box.high { background: rgba(248,113,113,0.06); border: 1px solid rgba(248,113,113,0.2); color: #fca5a5; }
+  .metrics-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+  .metric { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; text-align: center; }
+  .metric .val { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 700; }
+  .metric .key { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .suggestion-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+  .suggestion-list li {
+    display: flex; align-items: flex-start; gap: 10px;
+    font-size: 13px; color: var(--muted); line-height: 1.5;
+  }
+  .suggestion-list li::before { content: '→'; color: var(--accent); font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+  .placeholder-state {
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 12px; text-align: center; padding: 3rem; color: var(--muted);
+  }
+  .placeholder-state .big-icon { font-size: 3rem; opacity: 0.3; }
+  .bar-chart { margin-top: 4px; }
+  .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 12px; }
+  .bar-label { width: 80px; color: var(--muted); text-align: right; flex-shrink: 0; }
+  .bar-track { flex: 1; height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 3px; background: var(--accent); transition: width 0.8s cubic-bezier(.4,0,.2,1); }
+  .bar-val { width: 35px; color: var(--text); font-weight: 500; }
+
+  /* CHAT */
+  .chat-wrapper {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    display: flex; flex-direction: column; height: 560px; overflow: hidden;
+  }
+  .chat-header {
+    padding: 1rem 1.5rem; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 12px;
+  }
+  .agent-avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; flex-shrink: 0;
+  }
+  .agent-info .name { font-weight: 500; font-size: 14px; }
+  .agent-info .status { font-size: 12px; color: var(--success); display: flex; align-items: center; gap: 5px; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); display: inline-block; }
+  .chat-messages {
+    flex: 1; overflow-y: auto; padding: 1.2rem;
+    display: flex; flex-direction: column; gap: 12px;
+    scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+  }
+  .msg { display: flex; gap: 10px; align-items: flex-end; max-width: 85%; }
+  .msg.user { align-self: flex-end; flex-direction: row-reverse; }
+  .msg-avatar {
+    width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+    background: var(--surface); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center; font-size: 13px;
+  }
+  .msg.user .msg-avatar { background: rgba(232,200,74,0.15); border-color: rgba(232,200,74,0.3); }
+  .msg-bubble {
+    padding: 10px 14px; border-radius: 14px; font-size: 13.5px; line-height: 1.6;
+  }
+  .msg.bot .msg-bubble {
+    background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+    border-bottom-left-radius: 4px;
+  }
+  .msg.user .msg-bubble {
+    background: rgba(232,200,74,0.12); border: 1px solid rgba(232,200,74,0.2);
+    border-bottom-right-radius: 4px; color: var(--text);
+  }
+  .typing { display: flex; gap: 4px; padding: 12px 14px; align-items: center; }
+  .typing span {
+    width: 6px; height: 6px; background: var(--muted); border-radius: 50%;
+    animation: bounce 1.2s infinite;
+  }
+  .typing span:nth-child(2) { animation-delay: 0.2s; }
+  .typing span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-6px)} }
+  .chat-input-area {
+    padding: 1rem 1.2rem; border-top: 1px solid var(--border);
+    display: flex; gap: 10px; align-items: center;
+  }
+  .chat-input {
+    flex: 1; background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+    color: var(--text); padding: 10px 14px; border-radius: 100px;
+    font-family: 'DM Sans', sans-serif; font-size: 14px;
+    transition: border-color 0.2s;
+  }
+  .chat-input:focus { outline: none; border-color: rgba(232,200,74,0.35); }
+  .send-btn {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: var(--accent); border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s; flex-shrink: 0; font-size: 16px;
+  }
+  .send-btn:hover { background: #f0d660; transform: scale(1.05); }
+  .quick-chips { display: flex; gap: 8px; flex-wrap: wrap; padding: 0 1.2rem 0.8rem; }
+  .quick-chip {
+    background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+    border-radius: 100px; padding: 5px 12px; font-size: 12px; color: var(--muted);
+    cursor: pointer; transition: all 0.2s;
+  }
+  .quick-chip:hover { border-color: rgba(232,200,74,0.3); color: var(--accent); }
+
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+  .fade-in { animation: fadeUp 0.5s ease both; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .section-divider { border: none; border-top: 1px solid var(--border); margin: 0 0 5rem; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Ghar<span>Mol</span></div>
+  <nav class="nav-links">
+    <a href="#predictor">Predict</a>
+    <a href="#assistant">AI Assistant</a>
+  </nav>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-content">
+    <div class="hero-badge">AI-Powered · India Real Estate</div>
+    <h1>Know the <em>real price</em> of your dream home</h1>
+    <p>Predict fair market value for any flat or house in India.<br>BHK configuration, amenities, location — all factors considered.</p>
+    <div class="hero-cta">
+      <button class="btn-primary" onclick="document.getElementById('predictor').scrollIntoView({behavior:'smooth'})">Start Predicting</button>
+      <button class="btn-outline" onclick="document.getElementById('assistant').scrollIntoView({behavior:'smooth'})">Ask AI Assistant</button>
+    </div>
+    <div class="stats-row">
+      <div class="stat"><div class="stat-num">98%</div><div class="stat-label">Accuracy</div></div>
+      <div class="stat"><div class="stat-num">50+</div><div class="stat-label">Cities</div></div>
+      <div class="stat"><div class="stat-num">12</div><div class="stat-label">Amenities</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- MAIN -->
+<main>
+
+  <!-- PREDICTOR -->
+  <section id="predictor">
+    <div class="section-title">House Price Predictor</div>
+    <div class="section-sub">Fill in the details below to get an AI-estimated market value</div>
+    <div class="predictor-grid">
+
+      <!-- FORM -->
+      <div class="form-card">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>City</label>
+            <select id="city">
+              <option value="mumbai">Mumbai</option>
+              <option value="delhi">Delhi NCR</option>
+              <option value="bangalore">Bangalore</option>
+              <option value="pune">Pune</option>
+              <option value="hyderabad">Hyderabad</option>
+              <option value="chennai">Chennai</option>
+              <option value="ahmedabad" selected>Ahmedabad</option>
+              <option value="kolkata">Kolkata</option>
+              <option value="surat">Surat</option>
+              <option value="jaipur">Jaipur</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>BHK Configuration</label>
+            <select id="bhk">
+              <option value="1">1 BHK</option>
+              <option value="2" selected>2 BHK</option>
+              <option value="3">3 BHK</option>
+              <option value="4">4 BHK</option>
+              <option value="5">5+ BHK / Villa</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Area (sq ft)</label>
+            <input type="number" id="area" value="950" min="200" max="10000">
+          </div>
+          <div class="form-group">
+            <label>Floor</label>
+            <select id="floor">
+              <option value="ground">Ground / 1st</option>
+              <option value="low">Low (2–5)</option>
+              <option value="mid" selected>Mid (6–15)</option>
+              <option value="high">High (16–25)</option>
+              <option value="penthouse">Penthouse</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Property Age</label>
+            <select id="age">
+              <option value="new">New / Under Construction</option>
+              <option value="1-3" selected>1–3 Years</option>
+              <option value="3-8">3–8 Years</option>
+              <option value="8-15">8–15 Years</option>
+              <option value="15+">15+ Years</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Locality Type</label>
+            <select id="locality">
+              <option value="prime">Prime / Central</option>
+              <option value="suburban" selected>Suburban</option>
+              <option value="peripheral">Peripheral</option>
+              <option value="outskirts">Outskirts</option>
+            </select>
+          </div>
+          <div class="form-group full">
+            <label>Furnishing</label>
+            <select id="furnish">
+              <option value="unfurnished">Unfurnished</option>
+              <option value="semi" selected>Semi-Furnished</option>
+              <option value="fully">Fully Furnished</option>
+              <option value="premium">Premium / Luxury Fitted</option>
+            </select>
+          </div>
+          <div class="form-group full">
+            <label>Amenities Included</label>
+            <div class="amenities-grid" id="amenitiesGrid">
+              <div class="amenity-chip active" data-val="lift"><span class="icon">🛗</span>Lift</div>
+              <div class="amenity-chip active" data-val="parking"><span class="icon">🚗</span>Parking</div>
+              <div class="amenity-chip" data-val="gym"><span class="icon">🏋️</span>Gym</div>
+              <div class="amenity-chip" data-val="pool"><span class="icon">🏊</span>Pool</div>
+              <div class="amenity-chip" data-val="security"><span class="icon">🔒</span>Security</div>
+              <div class="amenity-chip active" data-val="power"><span class="icon">⚡</span>Power Backup</div>
+              <div class="amenity-chip" data-val="garden"><span class="icon">🌳</span>Garden</div>
+              <div class="amenity-chip" data-val="clubhouse"><span class="icon">🏠</span>Clubhouse</div>
+              <div class="amenity-chip" data-val="cctv"><span class="icon">📷</span>CCTV</div>
+              <div class="amenity-chip" data-val="intercom"><span class="icon">📞</span>Intercom</div>
+              <div class="amenity-chip" data-val="gated"><span class="icon">🏡</span>Gated Society</div>
+              <div class="amenity-chip" data-val="metro"><span class="icon">🚇</span>Metro Nearby</div>
+            </div>
+          </div>
+        </div>
+        <button class="predict-btn" onclick="predict()">⚡ Predict Price Now</button>
+      </div>
+
+      <!-- RESULT -->
+      <div class="result-card" id="resultCard">
+        <div class="placeholder-state" id="placeholderState">
+          <div class="big-icon">🏠</div>
+          <div style="font-weight:500; color: var(--text);">Fill in the details</div>
+          <div style="font-size:13px;">Your price prediction and analysis will appear here</div>
+        </div>
+        <div id="resultContent" style="display:none; flex-direction:column; gap:1.2rem;">
+          <div class="result-price">
+            <div class="label">Estimated Market Value</div>
+            <div class="price" id="priceDisplay">₹0</div>
+            <div class="range" id="priceRange">Range: ₹0 – ₹0</div>
+          </div>
+
+          <div class="verdict-box" id="verdictBox">
+            <strong id="verdictTitle"></strong><br>
+            <span id="verdictText"></span>
+          </div>
+
+          <div>
+            <div style="font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px;">Price Breakdown Factors</div>
+            <div class="bar-chart" id="barChart"></div>
+          </div>
+
+          <div class="metrics-row">
+            <div class="metric"><div class="val" id="metricPsf" style="color:var(--accent)">—</div><div class="key">Price / sq ft</div></div>
+            <div class="metric"><div class="val" id="metricScore" style="color:var(--accent2)">—</div><div class="key">Value Score</div></div>
+            <div class="metric"><div class="val" id="metricAmens" style="color:var(--success)">—</div><div class="key">Amenities</div></div>
+          </div>
+
+          <div>
+            <div style="font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px;">💡 Our Suggestions</div>
+            <ul class="suggestion-list" id="suggestionList"></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- AI ASSISTANT -->
+  <section id="assistant">
+    <div class="section-title">AI Real Estate Assistant</div>
+    <div class="section-sub">Ask anything about house buying, pricing, loans, or localities in India</div>
+    <div class="chat-wrapper">
+      <div class="chat-header">
+        <div class="agent-avatar">🤖</div>
+        <div class="agent-info">
+          <div class="name">GharMol AI</div>
+          <div class="status"><span class="dot"></span>Online · Real Estate Expert</div>
+        </div>
+      </div>
+      <div class="chat-messages" id="chatMessages">
+        <div class="msg bot">
+          <div class="msg-avatar">🤖</div>
+          <div class="msg-bubble">Namaste! 🙏 I'm your GharMol AI assistant. I can help you with:<br><br>
+          • Understanding house prices in any Indian city<br>
+          • BHK recommendations for your budget<br>
+          • Home loan guidance &amp; EMI calculations<br>
+          • Negotiation tips &amp; red flags to watch<br><br>
+          What would you like to know?</div>
+        </div>
+      </div>
+      <div class="quick-chips">
+        <div class="quick-chip" onclick="sendQuick('What is a fair price for 2 BHK in Ahmedabad?')">2 BHK price in Ahmedabad</div>
+        <div class="quick-chip" onclick="sendQuick('How do I negotiate a house price?')">Negotiation tips</div>
+        <div class="quick-chip" onclick="sendQuick('What amenities add the most value?')">Best amenities</div>
+        <div class="quick-chip" onclick="sendQuick('How much home loan can I get for ₹50 lakh salary?')">Home loan guide</div>
+      </div>
+      <div class="chat-input-area">
+        <input class="chat-input" id="chatInput" type="text" placeholder="Ask about property prices, loans, tips..." onkeydown="if(event.key==='Enter') sendMessage()">
+        <button class="send-btn" onclick="sendMessage()">➤</button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+// ─── AMENITY TOGGLE ───────────────────────────────────────────────────────────
+document.querySelectorAll('.amenity-chip').forEach(chip => {
+  chip.addEventListener('click', () => chip.classList.toggle('active'));
+});
+
+// ─── PRICE MODEL ─────────────────────────────────────────────────────────────
+const BASE = {
+  mumbai: 18000, delhi: 12000, bangalore: 9500, pune: 7500,
+  hyderabad: 7000, chennai: 7200, ahmedabad: 5800, kolkata: 5500,
+  surat: 4800, jaipur: 5000
+};
+const BHK_MULT = { '1': 0.82, '2': 1.0, '3': 1.18, '4': 1.35, '5': 1.6 };
+const FLOOR_MULT = { ground: 0.94, low: 0.97, mid: 1.0, high: 1.05, penthouse: 1.18 };
+const AGE_MULT = { new: 1.15, '1-3': 1.08, '3-8': 1.0, '8-15': 0.9, '15+': 0.78 };
+const LOC_MULT = { prime: 1.4, suburban: 1.0, peripheral: 0.78, outskirts: 0.62 };
+const FURNISH_ADD = { unfurnished: 0, semi: 250, fully: 600, premium: 1400 };
+const AMENITY_ADD = {
+  lift:200, parking:300, gym:400, pool:700, security:250,
+  power:200, garden:350, clubhouse:450, cctv:150, intercom:100, gated:350, metro:600
+};
+
+function formatINR(n) {
+  if (n >= 10000000) return '₹' + (n/10000000).toFixed(2) + ' Cr';
+  if (n >= 100000)  return '₹' + (n/100000).toFixed(2) + ' L';
+  return '₹' + n.toLocaleString('en-IN');
+}
+
+function predict() {
+  const city     = document.getElementById('city').value;
+  const bhk      = document.getElementById('bhk').value;
+  const area     = parseFloat(document.getElementById('area').value) || 900;
+  const floor    = document.getElementById('floor').value;
+  const age      = document.getElementById('age').value;
+  const locality = document.getElementById('locality').value;
+  const furnish  = document.getElementById('furnish').value;
+
+  const activeAmens = [...document.querySelectorAll('.amenity-chip.active')].map(c => c.dataset.val);
+  const amenCount   = activeAmens.length;
+  const amenBonus   = activeAmens.reduce((s, a) => s + (AMENITY_ADD[a] || 0), 0);
+
+  let basePSF = BASE[city];
+  basePSF *= BHK_MULT[bhk];
+  basePSF *= FLOOR_MULT[floor];
+  basePSF *= AGE_MULT[age];
+  basePSF *= LOC_MULT[locality];
+  basePSF += FURNISH_ADD[furnish];
+  basePSF += amenBonus / area * 10;
+
+  const price     = Math.round(basePSF * area);
+  const priceMin  = Math.round(price * 0.88);
+  const priceMax  = Math.round(price * 1.12);
+  const psf       = Math.round(basePSF);
+
+  // Value score
+  const score = Math.min(100, Math.round(
+    50 + (amenCount - 3) * 4 + (LOC_MULT[locality] > 1 ? 10 : 0) + (AGE_MULT[age] > 1 ? 8 : -5)
+  ));
+
+  // Factors
+  const factors = [
+    { label: 'Location',   val: Math.round(LOC_MULT[locality] * 70) },
+    { label: 'Amenities',  val: Math.min(100, amenCount * 8 + 4) },
+    { label: 'Condition',  val: Math.round(AGE_MULT[age] * 85) },
+    { label: 'Floor Prem', val: Math.round(FLOOR_MULT[floor] * 85) },
+    { label: 'Furnishing', val: Math.round((FURNISH_ADD[furnish] / 1400) * 100) },
+  ];
+
+  // Verdict
+  let verdictClass, verdictTitle, verdictText;
+  const psfMarket = BASE[city];
+  if (psf < psfMarket * 0.9) {
+    verdictClass = 'good'; verdictTitle = '✅ Below Market — Good Deal';
+    verdictText = `At ₹${psf.toLocaleString()}/sq ft this is below the city average of ₹${psfMarket.toLocaleString()}/sq ft. Consider negotiating further or acting fast.`;
+  } else if (psf < psfMarket * 1.15) {
+    verdictClass = 'fair'; verdictTitle = '🟡 At Market Rate — Fair Price';
+    verdictText = `Priced fairly at ₹${psf.toLocaleString()}/sq ft. Negotiate 5–8% below asking price. Verify all amenities are functional before closing.`;
+  } else {
+    verdictClass = 'high'; verdictTitle = '🔴 Above Market — Negotiate Hard';
+    verdictText = `At ₹${psf.toLocaleString()}/sq ft this is premium priced. You should negotiate 10–15% below asking. Check if premium is justified by location or brand.`;
+  }
+
+  // Suggestions
+  const suggestions = [
+    `Budget ₹${formatINR(Math.round(price * 0.1))} for registration & stamp duty (~10%)`,
+    `Request a 5–8% discount for upfront/cash payment`,
+    amenCount < 6 ? `Low amenity count affects resale — prefer societies with 6+ amenities` : `Good amenity mix enhances resale value by 15–20%`,
+    age === '15+' ? `Old property — get structural inspection done before buying` : `Property age looks good for long-term investment`,
+    locality === 'prime' ? `Prime location: expect 8–10% annual appreciation` : `Consider locations near upcoming metro/infra for better ROI`,
+    `Home loan EMI for this property ~${formatINR(Math.round(price * 0.8 * 0.007))}/month at 8.5% for 20 yrs`,
+  ];
+
+  // RENDER
+  document.getElementById('placeholderState').style.display = 'none';
+  const rc = document.getElementById('resultContent');
+  rc.style.display = 'flex';
+
+  document.getElementById('priceDisplay').textContent = formatINR(price);
+  document.getElementById('priceRange').textContent   = `Range: ${formatINR(priceMin)} – ${formatINR(priceMax)}`;
+  document.getElementById('metricPsf').textContent    = '₹' + psf.toLocaleString();
+  document.getElementById('metricScore').textContent  = score + '/100';
+  document.getElementById('metricAmens').textContent  = amenCount + '/12';
+
+  const vb = document.getElementById('verdictBox');
+  vb.className = 'verdict-box ' + verdictClass;
+  document.getElementById('verdictTitle').textContent = verdictTitle;
+  document.getElementById('verdictText').textContent  = verdictText;
+
+  const bc = document.getElementById('barChart');
+  bc.innerHTML = factors.map(f => `
+    <div class="bar-row">
+      <div class="bar-label">${f.label}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:0%" data-w="${f.val}%"></div></div>
+      <div class="bar-val">${f.val}%</div>
+    </div>`).join('');
+  setTimeout(() => {
+    bc.querySelectorAll('.bar-fill').forEach(b => b.style.width = b.dataset.w);
+  }, 50);
+
+  const sl = document.getElementById('suggestionList');
+  sl.innerHTML = suggestions.map(s => `<li>${s}</li>`).join('');
+
+  rc.classList.add('fade-in');
+}
+
+// ─── AI CHAT ─────────────────────────────────────────────────────────────────
+const SYSTEM_PROMPT = `You are GharMol AI, an expert Indian real estate assistant. You help users understand property prices, BHK configurations, home loans, market trends, negotiation strategies, and investment advice specifically for Indian cities. 
+
+Context: You're embedded in a house price prediction app. Users are typically Indian home buyers or investors. Be concise, warm, practical, and use ₹ for currency. Mention specific Indian cities, localities, and real estate norms. Keep responses under 150 words. Use bullet points for lists. Occasionally use friendly Hindi words like "bilkul", "bahut acha" naturally.`;
+
+let chatHistory = [];
+
+async function sendMessage() {
+  const input = document.getElementById('chatInput');
+  const text  = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  appendMsg('user', text);
+  chatHistory.push({ role: 'user', content: text });
+  showTyping();
+  await callAI(text);
+}
+
+function sendQuick(text) {
+  document.getElementById('chatInput').value = text;
+  sendMessage();
+}
+
+function appendMsg(role, text) {
+  const msgs = document.getElementById('chatMessages');
+  const div  = document.createElement('div');
+  div.className = 'msg ' + role;
+  div.innerHTML = `
+    <div class="msg-avatar">${role === 'bot' ? '🤖' : '👤'}</div>
+    <div class="msg-bubble">${text.replace(/\n/g,'<br>')}</div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function showTyping() {
+  const msgs = document.getElementById('chatMessages');
+  const div  = document.createElement('div');
+  div.className = 'msg bot'; div.id = 'typingIndicator';
+  div.innerHTML = `<div class="msg-avatar">🤖</div><div class="msg-bubble"><div class="typing"><span></span><span></span><span></span></div></div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function removeTyping() {
+  const t = document.getElementById('typingIndicator');
+  if (t) t.remove();
+}
+
+async function callAI(userMsg) {
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: SYSTEM_PROMPT,
+        messages: chatHistory
+      })
+    });
+    const data = await res.json();
+    const reply = data.content?.map(b => b.text || '').join('') || 'Sorry, I could not get a response right now.';
+    removeTyping();
+    chatHistory.push({ role: 'assistant', content: reply });
+    appendMsg('bot', reply);
+  } catch(e) {
+    removeTyping();
+    appendMsg('bot', 'Oops! Connection issue. Please try again in a moment.');
+  }
+}
+</script>
+</body>
+</html>
